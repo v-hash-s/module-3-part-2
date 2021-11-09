@@ -43,9 +43,9 @@ export class GalleryManager {
     });
     try {
       await client.send(command);
-      log("image is uploaded lol");
+      return true;
     } catch (err) {
-      return "err";
+      return false;
     }
   }
 
@@ -76,6 +76,7 @@ export class GalleryManager {
   //     return this.returnGalleryResponse(galleryResponse);
   //   }
   // }
+
   async getEmailFromToken(token: string) {
     const email = jwt.verify(token, getEnv("TOKEN_KEY"));
     // @ts-ignore
@@ -96,20 +97,6 @@ export class GalleryManager {
     }
   }
 
-  // async isExist(image) {
-  //   await connectDB;
-  //   const exist = await ImageModel.findOne({ path: image }, { path: 1 }).then(
-  //     function (data: any) {
-  //       if (data) {
-  //         return true;
-  //       } else {
-  //         return false;
-  //       }
-  //     }
-  //   );
-  //   return exist;
-  // }
-
   async returnResponse(isImageUploaded) {
     if (isImageUploaded) {
       return {
@@ -122,10 +109,4 @@ export class GalleryManager {
       statusCode: 500,
     };
   }
-
-  // async saveImages() {
-  //   const email = await this.getEmailFromToken(this.token);
-  //   await this.service.saveImageInDB(this.filename, email);
-  //   return await this.returnResponse(this.isExist(this.filename));
-  // }
 }

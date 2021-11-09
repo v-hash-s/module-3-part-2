@@ -15,7 +15,14 @@ import {
   HeadObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import {
+  GetItemCommand,
+  PutItemCommand,
+  PutItemInput,
+  PutItemOutput,
+} from "@aws-sdk/client-dynamodb";
 import { GalleryService } from "./gallery.service";
+import { DynamoClient } from "@services/dynamodb-client";
 
 const s3Config: S3ClientConfig = {
   region: getEnv("REGION"),
@@ -29,15 +36,55 @@ const s3Opts = {
 };
 
 export const getGallery = async (event) => {
+  log(event.queryStringParameters);
   try {
-    const command = new ListObjectsCommand(s3Opts);
-    const response = await client.send(command);
-    const contents = response.Contents;
-    contents?.forEach((el) => {
-      if (el.Size !== 0) {
-        log(el);
+    const query = event.queryStringParameters;
+    if (query.filter) {
+      const token = event.multiValueHeaders.Authorization.toString().replace(
+        "Bearer ",
+        ""
+      );
+      const manager = new GalleryManager();
+      const email = await manager.getEmailFromToken(token);
+      log(email);
+
+      const params = {
+        TableName: getEnv("USERS_TABLE_NAME"),
+        Key: {
+          email: {
+            S: email,
+          },
+        },
+      };
+
+      const GetItem = new GetItemCommand(params);
+      const userFindResult = await DynamoClient.send(GetItem);
+      const usersImages = userFindResult?.Item?.images.SS;
+      // usersImages?.forEach((img) => {});
+      log(usersImages);
+    } else {
+      const photos: string[] = [];
+      const command = new ListObjectsCommand({
+        Bucket: getEnv("BUCKET"),
+      });
+      const images = await client.send(command);
+      log(images.Contents?.length);
+      for (let i = 0; i < images?.Contents?.length!; i++) {
+        photos.push(images.Contents![i].Key!);
+        log(images.Contents![i].Key);
       }
-    });
+    }
+
+    ////////
+    // const response = await client.send(command);
+    // const contents = response.Contents;
+    // contents?.forEach((el) => {
+    //   if (el.Size !== 0) {
+    //     log(el);
+    //   }
+    // });
+    //////////////////
+
     // log(JSON.stringify(event.body));
     // const command = new PutObjectCommand(Bucket:  getEnv("USERS_TABLE_NAME"),
     //   Key: 'name', Body: "")

@@ -58,7 +58,7 @@ export class GalleryService {
   /// UPLOAD
 
   async saveImageInDB(payload, email) {
-    const result = await this.isExist(payload, email);
+    const result = await this.manager.isExist(payload, email);
     if (!result) {
       const command = new PutObjectCommand({
         Bucket: "gallery-images-bucket",
@@ -68,7 +68,7 @@ export class GalleryService {
       });
       const response = await client.send(command);
       // log(response);
-      const res = await this.isExist(payload, email);
+      const res = await this.manager.isExist(payload, email);
       if (!res) {
         return {
           statusCode: 404,
@@ -85,19 +85,6 @@ export class GalleryService {
         statusCode: 309,
         content: "Image already exists",
       };
-    }
-  }
-
-  async isExist(payload, email) {
-    const command = new GetObjectCommand({
-      Bucket: getEnv("BUCKET"),
-      Key: `${email}/${payload.files[0].filename}`,
-    });
-    try {
-      await client.send(command);
-      return true;
-    } catch (err) {
-      return false;
     }
   }
 }
