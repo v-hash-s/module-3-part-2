@@ -87,6 +87,8 @@ export class AuthManager {
     };
     const GetItem = new GetItemCommand(params);
     const userFindResult = await DynamoClient.send(GetItem);
+    log(userFindResult);
+    if (userFindResult.Item === undefined) return false;
     log("USER FIND RESULT: ", userFindResult?.Item?.password?.S);
     const passwordFromDB = await userFindResult?.Item?.password?.S;
     // bcrypt.compareSync(user.password, userFindResult.Item.S.password);

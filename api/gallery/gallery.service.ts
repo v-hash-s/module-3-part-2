@@ -1,10 +1,9 @@
 import { connectDB } from "@services/db_connection";
-import ImageModel from "@models/MongoDB/image.model";
 import { log } from "@helper/logger";
 import * as path from "path";
 import * as fs from "fs";
 import { QueryParameters, GalleryResponse } from "./gallery.interfaces";
-
+import { DynamoClient } from "../../services/dynamodb-client";
 export class GalleryService {
   private readonly FOLDER_PATH: string = path.resolve(
     path.join(__dirname, "../../../../images")
@@ -67,26 +66,19 @@ export class GalleryService {
     return arr;
   }
 
-  async saveImageInDB(uploadedImage, stats, user): Promise<void> {
-    const image = new ImageModel({
-      path: uploadedImage,
-      metadata: stats,
-      owner: user,
-    });
-    await image.save().then((result: any) => console.log(result));
-  }
+  async saveImageInDB(uploadedImage, user): Promise<void> {}
 
-  async saveImageLocally(
-    uploadedImage: string,
-    uploadedContent: Buffer
-  ): Promise<void> {
-    fs.writeFile(
-      path.join(this.FOLDER_PATH, uploadedImage),
-      uploadedContent,
-      { encoding: null },
-      (err: any) => {
-        if (err) console.error(err);
-      }
-    );
-  }
+  // async saveImageLocally(
+  //   uploadedImage: string,
+  //   uploadedContent: Buffer
+  // ): Promise<void> {
+  //   fs.writeFile(
+  //     path.join(this.FOLDER_PATH, uploadedImage),
+  //     uploadedContent,
+  //     { encoding: null },
+  //     (err: any) => {
+  //       if (err) console.error(err);
+  //     }
+  //   );
+  // }
 }

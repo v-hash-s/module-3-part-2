@@ -36,7 +36,7 @@ export class AuthService {
   }
 
   async hashPassword(password: string): Promise<string> {
-    console.log("Pasword in function: ", password);
+    log("Pasword in function: ", password);
     const saltRounds = getEnv("SALT_ROUNDS");
     const salt = await this.getSalt(Number(saltRounds));
     const hashedPassword = await bcrypt.hash(password, salt);

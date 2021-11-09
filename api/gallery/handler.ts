@@ -1,4 +1,4 @@
-// import { GalleryManager } from "./gallery.manager";
+import { GalleryManager } from "./gallery.manager";
 // import { createResponse } from "@helper/http-api/response";
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { errorHandler } from "@helper/http-api/error-handler";
@@ -11,26 +11,37 @@ import {
   S3Client,
   S3ClientConfig,
   ListObjectsCommand,
+  PutObjectCommand,
 } from "@aws-sdk/client-s3";
 
 const s3Config: S3ClientConfig = {
-  credentials: {
-    accessKeyId: getEnv("ACCESS"),
-    secretAccessKey: getEnv("SECRET"),
-  },
   region: getEnv("REGION"),
 };
 
 const client = new S3Client(s3Config);
-const s3Opts = { Bucket: "gallery-images-bucket" };
+const s3Opts = {
+  Bucket: getEnv("USERS_TABLE_NAME"),
+  Prefix: "public-images/",
+  Delimiter: "/",
+};
 
 export const getGallery = async (event) => {
   try {
-    log(client);
     const command = new ListObjectsCommand(s3Opts);
     const response = await client.send(command);
-    log(response);
-    // await connectDB;
+    const contents = response.Contents;
+    contents?.forEach((el) => {
+      if (el.Size !== 0) {
+        log(el);
+      }
+    });
+    // log(JSON.stringify(event.body));
+    // const command = new PutObjectCommand(Bucket:  getEnv("USERS_TABLE_NAME"),
+    //   Key: 'name', Body: "")
+    // for (let i = 0; i < 3; i++) {
+    //   if (contents[i].Size != 0) log(contents[i].Size);
+    // }
+    // log(response.Contents);
     // const queryParameters = event.queryStringParameters;
     // //@ts-ignore
     // const token = event.multiValueHeaders.Authorization.toString().replace(
@@ -48,22 +59,33 @@ export const getGallery = async (event) => {
   }
 };
 
-// export const upload: APIGatewayProxyHandlerV2 = async (event) => {
-//   //@ts-ignore
-//   const payload = await multipartParser.parse(event);
-//   //@ts-ignore
-//   const token = await event.multiValueHeaders.Authorization.toString().replace(
-//     "Bearer ",
-//     ""
-//   );
-//   const manager = new GalleryManager(payload, token);
-//   if (await manager.isExist(payload.files[0].filename)) {
-//     const response = {
-//       statusCode: 309,
-//       content: "Image already exists",
-//     };
-//     return createResponse(response.statusCode, response.content);
-//   }
-//   const result = await manager.saveImages();
-//   return createResponse(result.statusCode, result.content);
-// };
+export const upload = async (event) => {
+  const payload = await multipartParser.parse(event);
+  // @ts-ignore
+  const token = await event.multiValueHeaders.Authorization.toString().replace(
+    "Bearer ",
+    ""
+  );
+  const manager = new GalleryManager(payload, token);
+  const email = await manager.getEmailFromToken(token);
+  log(email);
+  // log(payload.files);
+  const command = new PutObjectCommand({
+    Bucket: "gallery-images-bucket",
+    Body: payload.files[0].content,
+    Key: `${email}/${payload.files[0].filename}`,
+    ACL: "public-read",
+  });
+  const response = await client.send(command);
+  log(response);
+
+  // if (await manager.isExist(payload.files[0].filename)) {
+  //   const response = {
+  //     statusCode: 309,
+  //     content: "Image already exists",
+  //   };
+  //   return createResponse(response.statusCode, response.content);
+  // }
+  // const result = await manager.saveImages();
+  // return createResponse(result.statusCode, result.content);
+};
