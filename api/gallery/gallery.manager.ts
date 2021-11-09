@@ -9,6 +9,16 @@ import * as util from "util";
 const stat = util.promisify(fs.stat);
 import * as path from "path";
 import { DynamoClient } from "../../services/dynamodb-client";
+import {
+  paginateListObjectsV2,
+  S3Client,
+  S3ClientConfig,
+  ListObjectsCommand,
+  PutObjectCommand,
+  HeadObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+import { client } from "./handler";
 
 export class GalleryManager {
   private readonly service: GalleryService;
@@ -20,10 +30,23 @@ export class GalleryManager {
   private readonly token?;
 
   constructor(payload?, token?) {
-    this.service = new GalleryService();
+    // this.service = new GalleryService();
     this.content = payload?.files[0]?.content;
     this.filename = payload?.files[0]?.filename;
     this.token = token;
+  }
+
+  async isExist(payload, email) {
+    const command = new GetObjectCommand({
+      Bucket: getEnv("BUCKET"),
+      Key: `${email}/${payload.files[0].filename}`,
+    });
+    try {
+      await client.send(command);
+      log("image is uploaded lol");
+    } catch (err) {
+      return "err";
+    }
   }
 
   // async sendUsersImage(queryParameters, email) {
@@ -72,31 +95,6 @@ export class GalleryManager {
       };
     }
   }
-  // async isExist(image) {
-  //   log(image);
-
-  //   const params = {
-  //     TableName: getEnv("USERS_TABLE_NAME"),
-  //     Key: {
-  //       images: {
-  //         SS: image
-  //       },
-  //     },
-  //   };
-  //   const GetItem = new GetItemCommand(params);
-  //   const userFindResult = await DynamoClient.send(GetItem);
-  //   log(userFindResult);
-  //   if (userFindResult.Item === undefined) return false;
-  //   log("USER FIND RESULT: ", userFindResult?.Item?.password?.S);
-  //   const passwordFromDB = await userFindResult?.Item?.password?.S;
-  //   // bcrypt.compareSync(user.password, userFindResult.Item.S.password);
-  //   if (bcrypt.compareSync(user.password, passwordFromDB)) {
-  //     log(bcrypt.compareSync(user.password, passwordFromDB));
-  //     return true;
-  //   }
-  //   return false;
-  // }
-  // }
 
   // async isExist(image) {
   //   await connectDB;
@@ -111,12 +109,6 @@ export class GalleryManager {
   //   );
   //   return exist;
   // }
-  async getMetadata(image) {
-    log(image);
-    const stats = await stat(image);
-    log(stats);
-    return stats;
-  }
 
   async returnResponse(isImageUploaded) {
     if (isImageUploaded) {
@@ -131,9 +123,9 @@ export class GalleryManager {
     };
   }
 
-  async saveImages() {
-    const email = await this.getEmailFromToken(this.token);
-    await this.service.saveImageInDB(this.filename, email);
-    return await this.returnResponse(this.isExist(this.filename));
-  }
+  // async saveImages() {
+  //   const email = await this.getEmailFromToken(this.token);
+  //   await this.service.saveImageInDB(this.filename, email);
+  //   return await this.returnResponse(this.isExist(this.filename));
+  // }
 }
