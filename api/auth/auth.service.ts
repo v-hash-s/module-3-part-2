@@ -3,7 +3,7 @@ import * as jwt from "jsonwebtoken";
 import { connectDB } from "@services/db_connection";
 // import UserModel from "@models/MongoDB/user.model";
 import { Token, User } from "./auth.interfaces";
-import * as bcrypt from "bcrypt";
+import * as bcrypt from "bcryptjs";
 import {
   PutItemCommand,
   PutItemInput,
@@ -21,13 +21,18 @@ export class AuthService {
     log("creating new");
     const params = {
       TableName: getEnv("USERS_TABLE_NAME"),
+      // Item: {
+      //   email: {
+      //     S: user.email,
+      //   },
+      //   password: {
+      //     S: await this.hashPassword(user.password),
+      //   },
+      // },
       Item: {
-        email: {
-          S: user.email,
-        },
-        password: {
-          S: await this.hashPassword(user.password),
-        },
+        email: { S: user.email },
+        data: { S: "user" },
+        password: { S: await this.hashPassword(user.password) },
       },
     };
     const PutItem = new PutItemCommand(params);
@@ -40,11 +45,11 @@ export class AuthService {
     const saltRounds = getEnv("SALT_ROUNDS");
     const salt = await this.getSalt(Number(saltRounds));
     const hashedPassword = await bcrypt.hash(password, salt);
-    console.log("hashed password: ", hashedPassword);
+    log("hashed password: ", hashedPassword);
     return hashedPassword;
   }
 
-  async getSalt(saltRounds: number): Promise<number> {
+  async getSalt(saltRounds: number): Promise<string> {
     const salt = await bcrypt.genSalt(saltRounds);
     console.log("Salt: ", salt);
     return salt;

@@ -1,4 +1,4 @@
-import { RuntimeError } from '@errors/runtime/runtime-error';
+import { RuntimeError } from "@errors/runtime/runtime-error";
 
 /**
  * Extract substitutable envs, because we use webpack-dotenv plugin
@@ -15,12 +15,14 @@ const envs: Record<string, string | undefined> = {
   HIDE_LOGS: process.env.HIDE_LOGS,
   USERS_TABLE_NAME: process.env.USERS_TABLE_NAME,
   JOBS_TABLE_NAME: process.env.JOBS_TABLE_NAME,
+  SALT_ROUNDS: process.env.SALT_ROUNDS,
+  TOKEN_KEY: process.env.SALT_ROUNDS,
 };
 
-export type Stage = 'local' | 'dev' | 'test' | 'prod';
+export type Stage = "local" | "dev" | "test" | "prod";
 
 export function getStage(): Stage {
-  return getEnv('STAGE') as Stage;
+  return getEnv("STAGE") as Stage;
 }
 
 export function isStage(stage: Stage): boolean {

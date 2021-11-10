@@ -6,9 +6,10 @@ import { galleryConfig } from "./config/serverless/parts/gallery";
 // import { restApiCorsConfig } from "./config/serverless/parts/rest-api-cors";
 // import { usersConfig } from "./config/serverless/parts/users";
 import { joinParts } from "./config/serverless/utils";
+import { TableConfig } from "./config/serverless/tables";
 
 const masterConfig: AWS = {
-  service: "template-sls",
+  service: "vs-sls",
   configValidationMode: "warn",
   variablesResolutionMode: "20210326",
   unresolvedVariablesNotificationMode: "error",
@@ -119,4 +120,8 @@ const masterConfig: AWS = {
   ],
 };
 
-module.exports = joinParts(masterConfig, [authConfig, galleryConfig]);
+module.exports = joinParts(masterConfig, [
+  authConfig,
+  galleryConfig,
+  TableConfig,
+]);

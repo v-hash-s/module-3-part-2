@@ -13,6 +13,7 @@ export const signUp = async (event) => {
     const result = await manager.signUp(user);
     // const result = await manager.sendResponseToUser(user);
     return createResponse(result.statusCode, result.content);
+    // return result;
   } catch (err) {
     return errorHandler(err);
   }

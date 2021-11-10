@@ -2,10 +2,7 @@ import { AWSPartitial } from "./types";
 
 export const TableConfig: AWSPartitial = {
   provider: {
-    environment: {
-      USERS_TABLE_NAME:
-        "${self:custom.tablesNames.UsersTable.${self:provider.stage}}",
-    },
+    environment: {},
     iam: {
       role: {
         statements: [
@@ -19,63 +16,46 @@ export const TableConfig: AWSPartitial = {
               "dynamodb:PutItem",
               "dynamodb:DeleteItem",
               "dynamodb:UpdateItem",
-              "dynamodb:BatchGetItem",
-              "dynamodb:BatchWriteItem",
-              "dynamodb:CreateTable",
-              "dynamodb:UpdateTable",
             ],
             Resource: [
               "arn:aws:dynamodb:*:*:table/${file(env.yml):${self:provider.stage}.USERS_TABLE_NAME}",
+              "arn:aws:dynamodb:*:*:table/${file(env.yml):${self:provider.stage}.USERS_TABLE_NAME}/index/*",
             ],
           },
         ],
       },
     },
   },
+
   resources: {
     Resources: {
-      gallery: {
-        Type: "AWS::DynamoDB::Table",
+      galleryTable: {
         DeletionPolicy: "Retain",
+        Type: "AWS::DynamoDB::Table",
         Properties: {
-          AttributeDefinitions: [
-            {
-              AttributeName: "email",
-              AttributeType: "S",
-            },
-            {
-              AttributeName: "password",
-              AttributeType: "S",
-            },
-          ],
-          // ProvisionedThroughput: {
-          //   ReadCapacityUnits: 4,
-          //   WriteCapacityUnits: 2,
-          // },
+          TableName: "gallery",
           KeySchema: [
             {
               AttributeName: "email",
               KeyType: "HASH",
             },
             {
-              AttributeName: "password",
+              AttributeName: "data",
               KeyType: "RANGE",
             },
           ],
+          AttributeDefinitions: [
+            {
+              AttributeName: "email",
+              AttributeType: "S",
+            },
+            {
+              AttributeName: "data",
+              AttributeType: "S",
+            },
+          ],
           BillingMode: "PAY_PER_REQUEST",
-          TableName:
-            "${self:custom.tablesNames.UsersTable.${self:provider.stage}}",
         },
-      },
-    },
-  },
-  custom: {
-    tablesNames: {
-      UsersTable: {
-        local: "${self:service}-local-single-table-gallery",
-        dev: "${self:service}-dev-single-table-gallery",
-        test: "${self:service}-test-single-table-gallery",
-        prod: "${self:service}-prod-single-table-gallery",
       },
     },
   },

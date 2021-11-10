@@ -2,7 +2,7 @@ import { HttpBadRequestError } from "@errors/http";
 import { AuthService } from "./auth.service";
 import { connectDB } from "@services/db_connection";
 // import UserModel from "@models/MongoDB/user.model";
-import * as bcrypt from "bcrypt";
+import * as bcrypt from "bcryptjs";
 import { log } from "@helper/logger";
 import { User, Response } from "./auth.interfaces";
 import { getEnv } from "@helper/environment";
@@ -14,10 +14,10 @@ import {
   GetItemOutput,
 } from "@aws-sdk/client-dynamodb";
 
-AWS.config.update({
-  region: "us-east-2",
-  endpoint: "http://localhost:3000",
-});
+// AWS.config.update({
+//   region: "us-east-2",
+//   endpoint: "http://localhost:3000",
+// });
 
 var docClient = new AWS.DynamoDB.DocumentClient();
 var ddb = new AWS.DynamoDB();
@@ -58,24 +58,24 @@ export class AuthManager {
     }
   }
 
-  async signUp(user: User): Promise<Response> {
+  async signUp(user: User) /*: Promise<Response>*/ {
     const isInDB = await this.isUserInDB(user);
     log("IS IN DB: ", isInDB);
     if (isInDB) {
       return {
         statusCode: 400,
-        content: { errorMessage: "User already exists " },
+        content: { errorMessage: isInDB },
       };
     } else {
-      this.service.createUser(user);
+      await this.service.createUser(user);
       return {
         statusCode: 200,
-        content: { message: "Signed up" },
+        content: { message: isInDB },
       };
     }
   }
 
-  async isUserInDB(user: User): Promise<boolean> {
+  async isUserInDB(user: User) /*: Promise<boolean>*/ {
     log(user);
     const params = {
       TableName: getEnv("USERS_TABLE_NAME"),
@@ -83,17 +83,20 @@ export class AuthManager {
         email: {
           S: user.email,
         },
+        data: {
+          S: "user",
+        },
       },
     };
     const GetItem = new GetItemCommand(params);
     const userFindResult = await DynamoClient.send(GetItem);
     log(userFindResult);
-    if (userFindResult.Item === undefined) return false;
-    log("USER FIND RESULT: ", userFindResult?.Item?.password?.S);
-    const passwordFromDB = await userFindResult?.Item?.password?.S;
-    // bcrypt.compareSync(user.password, userFindResult.Item.S.password);
-    if (bcrypt.compareSync(user.password, passwordFromDB)) {
-      log(bcrypt.compareSync(user.password, passwordFromDB));
+    if (userFindResult.Item == null) return false;
+    const passwordFromDB = userFindResult.Item.password.S;
+    log("USER PASSWORD:", user.password);
+    log("DB PASSWORD:", passwordFromDB);
+
+    if (bcrypt.compareSync(user.password, passwordFromDB!)) {
       return true;
     }
     return false;
