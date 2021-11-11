@@ -64,13 +64,13 @@ export class AuthManager {
     if (isInDB) {
       return {
         statusCode: 400,
-        content: { errorMessage: isInDB },
+        content: { errorMessage: "User already exists" },
       };
     } else {
       await this.service.createUser(user);
       return {
         statusCode: 200,
-        content: { message: isInDB },
+        content: { message: "Signed up" },
       };
     }
   }

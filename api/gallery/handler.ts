@@ -117,11 +117,12 @@ export const upload = async (event) => {
     "Bearer ",
     ""
   );
+  log(payload.files);
   const manager = new GalleryManager(payload, token);
   const service = new GalleryService();
   const email = await manager.getEmailFromToken(token);
   const result = await service.saveImageInDB(payload, email);
-  return createResponse(result.statusCode, result.content);
+  // return createResponse(result.statusCode, result.content);
   // log(email);
   // const command = new GetObjectCommand({
   //   Bucket: getEnv("BUCKET"),

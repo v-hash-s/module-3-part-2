@@ -7,6 +7,7 @@ import { galleryConfig } from "./config/serverless/parts/gallery";
 // import { usersConfig } from "./config/serverless/parts/users";
 import { joinParts } from "./config/serverless/utils";
 import { TableConfig } from "./config/serverless/tables";
+import { BucketConfig } from "./config/serverless/s3";
 
 const masterConfig: AWS = {
   service: "vs-sls",
@@ -124,4 +125,5 @@ module.exports = joinParts(masterConfig, [
   authConfig,
   galleryConfig,
   TableConfig,
+  BucketConfig,
 ]);

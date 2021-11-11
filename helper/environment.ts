@@ -17,6 +17,7 @@ const envs: Record<string, string | undefined> = {
   JOBS_TABLE_NAME: process.env.JOBS_TABLE_NAME,
   SALT_ROUNDS: process.env.SALT_ROUNDS,
   TOKEN_KEY: process.env.SALT_ROUNDS,
+  IMAGES_BUCKET_NAME: process.env.IMAGES_BUCKET_NAME,
 };
 
 export type Stage = "local" | "dev" | "test" | "prod";

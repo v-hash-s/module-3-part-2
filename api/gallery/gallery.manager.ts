@@ -38,7 +38,7 @@ export class GalleryManager {
 
   async isExist(payload, email) {
     const command = new GetObjectCommand({
-      Bucket: getEnv("BUCKET"),
+      Bucket: getEnv("IMAGES_BUCKET_NAME"),
       Key: `${email}/${payload.files[0].filename}`,
     });
     try {

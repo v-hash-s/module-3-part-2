@@ -17,6 +17,7 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { GalleryManager } from "./gallery.manager";
+import { s3Client } from "@services/s3Client";
 export class GalleryService {
   private readonly FOLDER_PATH: string = path.resolve(
     path.join(__dirname, "../../../../images")
@@ -61,13 +62,14 @@ export class GalleryService {
     const result = await this.manager.isExist(payload, email);
     if (!result) {
       const command = new PutObjectCommand({
-        Bucket: "gallery-images-bucket",
+        Bucket: getEnv("IMAGES_BUCKET_NAME"),
         Body: payload.files[0].content,
         Key: `${email}/${payload.files[0].filename}`,
         ACL: "public-read",
+        // ContentType: payload.files[0].filename.mimetype,
       });
-      const response = await client.send(command);
-      // log(response);
+      const response = await s3Client.send(command);
+      log(response);
       const res = await this.manager.isExist(payload, email);
       if (!res) {
         return {
