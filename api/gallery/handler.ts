@@ -122,35 +122,6 @@ export const upload = async (event) => {
   const service = new GalleryService();
   const email = await manager.getEmailFromToken(token);
   const result = await service.saveImageInDB(payload, email);
+
   return createResponse(result.statusCode, result.content);
-  // log(email);
-  // const command = new GetObjectCommand({
-  //   Bucket: getEnv("BUCKET"),
-  //   Key: `${email}/${payload.files[0].filename}`,
-  // });
-  // try {
-  //   await client.send(command);
-  //   log("image is uploaded lol");
-  // } catch (err) {
-  //   return "err";
-  // }
-
-  // const command = new PutObjectCommand({
-  //   Bucket: "gallery-images-bucket",
-  //   Body: payload.files[0].content,
-  //   Key: `${email}/${payload.files[0].filename}`,
-  //   ACL: "public-read",
-  // });
-  // const response = await client.send(command);
-  // log(response);
-
-  // if (await manager.isExist(payload.files[0].filename)) {
-  //   const response = {
-  //     statusCode: 309,
-  //     content: "Image already exists",
-  //   };
-  //   return createResponse(response.statusCode, response.content);
-  // }
-  // const result = await manager.saveImages();
-  // return createResponse(result.statusCode, result.content);
 };

@@ -9,6 +9,7 @@ import * as util from "util";
 const stat = util.promisify(fs.stat);
 import * as path from "path";
 import { DynamoClient } from "../../services/dynamodb-client";
+import * as bcrypt from "bcryptjs";
 import {
   paginateListObjectsV2,
   S3Client,
@@ -18,7 +19,16 @@ import {
   HeadObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import {
+  PutItemCommand,
+  PutItemInput,
+  PutItemOutput,
+} from "@aws-sdk/client-dynamodb";
 import { client } from "./handler";
+import { AttributeValue, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
+import { createServer } from "http";
+import { createSecretKey } from "crypto";
+import { s3Client } from "@services/s3Client";
 
 export class GalleryManager {
   private readonly service: GalleryService;
@@ -42,11 +52,49 @@ export class GalleryManager {
       Key: `${email}/${payload.files[0].filename}`,
     });
     try {
-      await client.send(command);
+      await s3Client.send(command);
       return true;
     } catch (err) {
       return false;
     }
+  }
+
+  cutEmail(filename, email) {
+    return filename.replace(`${email}/`, "");
+  }
+
+  async hashImage(image) {
+    const saltRounds = getEnv("SALT_ROUNDS");
+    const salt = await bcrypt.genSalt(Number(saltRounds));
+    const hashedPassword = await bcrypt.hash(image, salt);
+    log("hashed password: ", hashedPassword);
+    return hashedPassword;
+  }
+
+  async saveImageToDB(file, filename, email) {
+    log("start saving to db");
+
+    const params = {
+      TableName: getEnv("USERS_TABLE_NAME"),
+      Item: {
+        email: { S: email },
+        data: { S: `image_${await this.hashImage(filename)} ` },
+        image: { S: this.cutEmail(filename, email) },
+        metadata: {
+          S: JSON.stringify({
+            ContentType: file.contentType,
+          }),
+        },
+        URL: {
+          S: `https://gallery-images-bucket.s3.us-east-2.amazonaws.com/${email}/${await this.cutEmail(
+            filename,
+            email
+          )}`,
+        },
+      },
+    };
+    log("SEnding to db image name");
+    return await DynamoClient.send(new PutItemCommand(params));
   }
 
   // async sendUsersImage(queryParameters, email) {

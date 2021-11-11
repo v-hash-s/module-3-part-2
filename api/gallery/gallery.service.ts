@@ -83,19 +83,32 @@ export class GalleryService {
       const response = await s3Client.send(command);
       log(response);
       const res = await this.manager.isExist(payload, email);
-      log(res);
+      log("IS EXIST: ", res);
       if (!res) {
         return {
           statusCode: 404,
           content: "Something went wrong. Try again later",
         };
       } else {
+        log("is about to save img to db");
+
+        await this.manager.saveImageToDB(
+          payload.files[0],
+          `${email}/${payload.files[0].filename}`,
+          email
+        );
         return {
           statusCode: 200,
           content: "Image is successfully uploaded",
         };
       }
     } else {
+      log("is about to save img to db");
+      await this.manager.saveImageToDB(
+        payload.files[0],
+        `${email}/${payload.files[0].filename}`,
+        email
+      );
       return {
         statusCode: 309,
         content: "Image already exists",
