@@ -57,20 +57,33 @@ export class GalleryService {
   // }
 
   /// UPLOAD
+  // async formatJPEG(filename) {
+  //   const regex = /.jpeg/;
+  //   const jpg = ".jpg";
+  //   if (filename.match(regex)) {
+  //     log("Filename: ", filename);
+  //     log("CHANGE: ", filename.replace(".jpeg", jpg));
+  //     // return filename.replace(".jpeg", jpg);
+  //   }
+  // }
 
   async saveImageInDB(payload, email) {
     const result = await this.manager.isExist(payload, email);
+    log(payload.files[0].contentType);
+    // this.formatJPEG(payload.files[0].filename);
     if (!result) {
       const command = new PutObjectCommand({
         Bucket: getEnv("IMAGES_BUCKET_NAME"),
+        // Body: payload.files[0].content,
         Body: payload.files[0].content,
         Key: `${email}/${payload.files[0].filename}`,
         ACL: "public-read",
-        // ContentType: payload.files[0].filename.mimetype,
+        ContentType: payload.files[0].contentType,
       });
       const response = await s3Client.send(command);
       log(response);
       const res = await this.manager.isExist(payload, email);
+      log(res);
       if (!res) {
         return {
           statusCode: 404,
