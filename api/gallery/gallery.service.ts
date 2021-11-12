@@ -6,6 +6,10 @@ import { ListObjectsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { QueryCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { GalleryManager } from "./gallery.manager";
 import { s3Client } from "@services/s3Client";
+import { GalleryResponse, Response } from "./gallery.interfaces";
+import { APIGatewayProxyEventQueryStringParameters } from "aws-lambda";
+import { AttributeValue } from "@aws-sdk/client-dynamodb";
+
 export class GalleryService {
   private readonly manager: GalleryManager;
 
@@ -20,7 +24,7 @@ export class GalleryService {
     return finalResult;
   }
 
-  async getTotal() {
+  async getTotal(): Promise<number> {
     const params = {
       Bucket: getEnv("IMAGES_BUCKET_NAME"),
     };
@@ -33,7 +37,11 @@ export class GalleryService {
     return total;
   }
 
-  async getPagedImages(images, pageNumber, limit) {
+  async getPagedImages(
+    images,
+    pageNumber: number,
+    limit: number
+  ): Promise<GalleryResponse> {
     limit = Number(limit);
     pageNumber = Number(pageNumber);
     const photos = [] as any;
@@ -51,7 +59,7 @@ export class GalleryService {
     };
   }
 
-  async formatGalleryObject(images) {
+  async formatGalleryObject(images): Promise<string[]> {
     let urls = await images.map(async (el) => {
       return await el;
     });
@@ -60,7 +68,15 @@ export class GalleryService {
     return resolvedImages;
   }
 
-  async getGalleryObjects(query, email) {
+  async getGalleryObjects(
+    query: APIGatewayProxyEventQueryStringParameters,
+    email: string
+  ): Promise<
+    | {
+        [key: string]: AttributeValue;
+      }[]
+    | undefined
+  > {
     if (query.filter != "true") {
       const params = {
         TableName: getEnv("USERS_TABLE_NAME"),
@@ -107,7 +123,7 @@ export class GalleryService {
     }
   }
 
-  async saveImageInDB(payload, email) {
+  async saveImageInDB(payload, email): Promise<Response> {
     const result = await this.manager.isExist(payload, email);
     if (!result) {
       const command = new PutObjectCommand({

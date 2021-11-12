@@ -3,10 +3,10 @@ import { createResponse } from "@helper/http-api/response";
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { log } from "@helper/logger";
 import * as multipartParser from "lambda-multipart-parser";
-
+import { Response } from "./gallery.interfaces";
 import { GalleryService } from "./gallery.service";
 
-export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
+export const getGallery: APIGatewayProxyHandlerV2<Response> = async (event) => {
   const query = event.queryStringParameters;
   const manager = new GalleryManager();
   const service = new GalleryService();
@@ -16,12 +16,16 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
     ""
   );
   const email = await manager.getEmailFromToken(token);
-  const images = await service.getGalleryObjects(query, email);
+  const images = await service.getGalleryObjects(query!, email);
   const readyImages = await service.formatGalleryObject(images);
 
   if (query!.page && query!.limit) {
     const toSendImages = await manager.sendGalleryObject(
-      await service.getPagedImages(readyImages, query!.page, query!.limit)
+      await service.getPagedImages(
+        readyImages,
+        Number(query!.page),
+        Number(query!.limit)
+      )
     );
     return createResponse(toSendImages.statusCode, toSendImages.content);
   } else {
@@ -30,7 +34,7 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
   }
 };
 
-export const upload: APIGatewayProxyHandlerV2 = async (event) => {
+export const upload: APIGatewayProxyHandlerV2<Response> = async (event) => {
   // @ts-ignore
   const payload = await multipartParser.parse(event);
   // @ts-ignore

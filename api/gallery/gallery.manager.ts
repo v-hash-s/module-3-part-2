@@ -1,16 +1,15 @@
 import { GalleryService } from "./gallery.service";
 import { getEnv } from "@helper/environment";
 // import { log } from "@helper/logger";
-import * as fs from "fs";
 import * as jwt from "jsonwebtoken";
-import * as util from "util";
-import * as path from "path";
 import { DynamoClient } from "../../services/dynamodb-client";
 import * as bcrypt from "bcryptjs";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
-
+import * as multipartParser from "lambda-multipart-parser";
 import { s3Client } from "@services/s3Client";
+import { String } from "aws-sdk/clients/cloudhsm";
+import { GalleryResponse, Response } from "./gallery.interfaces";
 
 export class GalleryManager {
   private readonly service: GalleryService;
@@ -24,7 +23,10 @@ export class GalleryManager {
     this.token = token;
   }
 
-  async isExist(payload, email) {
+  async isExist(
+    payload: multipartParser.MultipartRequest,
+    email: string
+  ): Promise<Boolean> {
     const command = new GetObjectCommand({
       Bucket: getEnv("IMAGES_BUCKET_NAME"),
       Key: `${email}/${payload.files[0].filename}`,
@@ -37,18 +39,22 @@ export class GalleryManager {
     }
   }
 
-  cutEmail(filename, email) {
+  cutEmail(filename: string, email: string): String {
     return filename.replace(`${email}/`, "");
   }
 
-  async hashImage(image) {
+  async hashImage(image: string): Promise<string> {
     const saltRounds = getEnv("SALT_ROUNDS");
     const salt = await bcrypt.genSalt(Number(saltRounds));
     const hashedPassword = await bcrypt.hash(image, salt);
     return hashedPassword;
   }
 
-  async saveImageToDB(file, filename, email) {
+  async saveImageToDB(
+    file: multipartParser.MultipartRequest,
+    filename: string,
+    email: string
+  ) {
     const params = {
       TableName: getEnv("USERS_TABLE_NAME"),
       Item: {
@@ -71,7 +77,7 @@ export class GalleryManager {
     return await DynamoClient.send(new PutItemCommand(params));
   }
 
-  async sendGalleryObject(images) {
+  async sendGalleryObject(images): Promise<Response> {
     return {
       content: JSON.stringify(images),
       statusCode: 200,
@@ -91,7 +97,7 @@ export class GalleryManager {
     return email.email;
   }
 
-  async returnGalleryResponse(galleryResponse) {
+  async returnGalleryResponse(galleryResponse): Promise<Response> {
     if (galleryResponse) {
       return {
         statusCode: 200,
