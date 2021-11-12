@@ -5,7 +5,6 @@ import * as path from "path";
 import * as fs from "fs";
 import { QueryParameters, GalleryResponse } from "./gallery.interfaces";
 import { DynamoClient } from "../../services/dynamodb-client";
-import { S3Service } from "../../services/s3.service";
 import * as crypto from "crypto";
 import {
   paginateListObjectsV2,
@@ -53,16 +52,25 @@ export class GalleryService {
 
   // async getPagesNumber(queryParameters: QueryParameters): Promise<number> {
   //   let limit = Number(queryParameters.limit);
-  //   // const counts = await ImageModel.count();
-  //   // const finalResult = Math.ceil(counts / limit);
+  //   const counts = this.getTotal();
+  //   const finalResult = Math.ceil(counts / limit);
 
   //   return finalResult;
   // }
 
-  // async getTotal(queryParameters: QueryParameters): Promise<number> {
-  //   const total = await this.getPagesNumber(queryParameters);
-  //   return total;
-  // }
+  async getTotal() {
+    const params = {
+      Bucket: getEnv("IMAGES_BUCKET_NAME"),
+    };
+    const command = new ListObjectsCommand(params);
+    const response = await s3Client.send(command);
+    let total = 0;
+    for (let i = 0; i < response?.Contents?.length!; i++) {
+      total++;
+    }
+    log(total);
+    return total;
+  }
 
   /// UPLOAD
   // async formatJPEG(filename) {
@@ -76,6 +84,7 @@ export class GalleryService {
   // }
 
   async getGalleryObjects(query, email) {
+    await this.getTotal();
     log(query, "IN FUNCTION");
     if (!query.filter) {
       const params = {
@@ -97,10 +106,7 @@ export class GalleryService {
 
       const img = await DynamoClient.send(GetItem);
       log(img);
-      return {
-        content: JSON.stringify(img),
-        statusCode: 200,
-      };
+      return img;
     } else {
       const params = {
         TableName: getEnv("USERS_TABLE_NAME"),
@@ -124,10 +130,7 @@ export class GalleryService {
       const GetItem = new QueryCommand(params);
       const img = await DynamoClient.send(GetItem);
       log(img);
-      return {
-        content: JSON.stringify(img),
-        statusCode: 200,
-      };
+      return img;
     }
   }
 
