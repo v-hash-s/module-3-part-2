@@ -52,7 +52,20 @@ export const getGallery = async (event) => {
   );
   const email = await manager.getEmailFromToken(token);
   const images = await service.getGalleryObjects(query, email);
+  log("IMAGES: ", images);
+  const readyImages = await service.formatGalleryObject(images);
+  log("READY IMAGES: ", readyImages);
 
+  if (query.page && query.limit) {
+    const toSendImages = await manager.sendGalleryObject(
+      await service.getPagedImages(readyImages, query.page, query.limit)
+    );
+    log("WITH QUERY: ", toSendImages);
+    return createResponse(toSendImages.statusCode, toSendImages.content);
+  } else {
+    const toSendImages = await manager.sendGalleryObject(readyImages);
+    return createResponse(toSendImages.statusCode, toSendImages.content);
+  }
   // if (!query.filter) {
   //   const params = {
   //     TableName: getEnv("USERS_TABLE_NAME"),
@@ -97,14 +110,7 @@ export const getGallery = async (event) => {
 
   //   const GetItem = new QueryCommand(params);
   //   const img = await DynamoClient.send(GetItem);
-  log("IMAGES: ", images.Items);
-  let photos = [] as any;
-  for (let i = 0; i < images.Items?.length!; i++) {
-    photos.push(images.Items![i].URL.S);
 
-    log(images.Items![i].URL.S);
-  }
-  return JSON.stringify(photos);
   // return createResponse(images.statusCode, images.content);
 
   // log(event.queryStringParameters);

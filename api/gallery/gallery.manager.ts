@@ -96,12 +96,12 @@ export class GalleryManager {
     return await DynamoClient.send(new PutItemCommand(params));
   }
 
-  // async sendUsersImage(queryParameters, email) {
+  // async sendUsersImage(queryParameters, email, images) {
   //   let filter;
   //   if (queryParameters.filter == null) {
   //     filter = false;
-  //     const galleryResponse = await this.service.sendGalleryObject(
-  //       queryParameters
+  //     const galleryResponse = await this.service.formatGalleryObject(
+  //       images
   //     );
   //     return this.returnGalleryResponse(galleryResponse);
   //   } else {
@@ -123,6 +123,19 @@ export class GalleryManager {
   //     return this.returnGalleryResponse(galleryResponse);
   //   }
   // }
+  async sendGalleryObject(images) {
+    return {
+      content: JSON.stringify(images),
+      statusCode: 200,
+    };
+  }
+
+  async getPagesNumber(total, limit) {
+    limit = Number(limit);
+    const finalResult = Math.ceil(total / limit);
+
+    return finalResult;
+  }
 
   async getEmailFromToken(token: string) {
     const email = jwt.verify(token, getEnv("TOKEN_KEY"));

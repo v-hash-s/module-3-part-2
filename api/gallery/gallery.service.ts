@@ -25,6 +25,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { GalleryManager } from "./gallery.manager";
 import { s3Client } from "@services/s3Client";
+import { AnyDocument } from "dynamoose/dist/Document";
 export class GalleryService {
   private readonly FOLDER_PATH: string = path.resolve(
     path.join(__dirname, "../../../../images")
@@ -34,21 +35,6 @@ export class GalleryService {
   constructor() {
     this.manager = new GalleryManager();
   }
-  // async sendGalleryObject(
-  //   queryParameters: QueryParameters
-  // ): Promise<GalleryResponse> {
-  //   const galleryResponse = {
-  //     objects: await this.getPhotosArray(
-  //       queryParameters.page,
-  //       queryParameters.limit
-  //     ),
-  //     total: await this.getPagesNumber(queryParameters),
-  //   };
-
-  //   log("GALLERY Response: ", galleryResponse);
-
-  //   return galleryResponse;
-  // }
 
   async getPagesNumber(queryParameters: QueryParameters): Promise<number> {
     log(queryParameters);
@@ -72,9 +58,42 @@ export class GalleryService {
     return total;
   }
 
-  // async formatGalleryObject(imagesArray) {
-  //   log(this.getGalleryObjects())
-  // }
+  async getPagedImages(images, pageNumber, limit) {
+    limit = Number(limit);
+    pageNumber = Number(pageNumber);
+    const photos = [] as any;
+    for (
+      let i = (pageNumber - 1) * limit;
+      //@ts-ignore
+      i < limit + (pageNumber - 1) * limit && i < images.length;
+      i++
+    ) {
+      photos.push(images[i]);
+      log(images[i] + " : " + i);
+    }
+    return {
+      objects: await photos,
+      total: await this.manager.getPagesNumber(await this.getTotal(), limit),
+    };
+  }
+
+  async formatGalleryObject(images) {
+    // const images = await imgs;
+    log("IN FORMAT FUNC: ", images);
+    // let photos = [] as any;
+    // for (let i = 0; i < images.Items?.length!; i++) {
+    //   photos.push(images.Items![i].URL.S);
+    //   // log(images.Items![i].URL.S);
+    // }
+    let urls = await images.map(async (el) => {
+      // return await el.Items!.URL.S;
+      return await el;
+    });
+    const photos = await Promise.all(urls);
+    const resolvedImages = photos.map((el: any) => el.URL.S);
+    log("PHOTOS: ", resolvedImages);
+    return resolvedImages;
+  }
 
   /// UPLOAD
   // async formatJPEG(filename) {
@@ -91,7 +110,7 @@ export class GalleryService {
     // await this.getPagesNumber(query);
     // await this.getTotal();
     log(query, "IN FUNCTION");
-    if (!query.filter) {
+    if (query.filter != "true") {
       const params = {
         TableName: getEnv("USERS_TABLE_NAME"),
         ProjectionExpression: "#URL",
@@ -111,7 +130,7 @@ export class GalleryService {
 
       const img = await DynamoClient.send(GetItem);
       log(img);
-      return img;
+      return img.Items;
     } else {
       const params = {
         TableName: getEnv("USERS_TABLE_NAME"),
@@ -135,7 +154,7 @@ export class GalleryService {
       const GetItem = new QueryCommand(params);
       const img = await DynamoClient.send(GetItem);
       log("IMG: ", img);
-      return img;
+      return img.Items;
     }
   }
 
