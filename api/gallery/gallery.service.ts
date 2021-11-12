@@ -50,13 +50,13 @@ export class GalleryService {
   //   return galleryResponse;
   // }
 
-  // async getPagesNumber(queryParameters: QueryParameters): Promise<number> {
-  //   let limit = Number(queryParameters.limit);
-  //   const counts = this.getTotal();
-  //   const finalResult = Math.ceil(counts / limit);
-
-  //   return finalResult;
-  // }
+  async getPagesNumber(queryParameters: QueryParameters): Promise<number> {
+    log(queryParameters);
+    let limit = Number(queryParameters.limit);
+    const counts = await this.getTotal();
+    const finalResult = Math.ceil(counts / limit);
+    return finalResult;
+  }
 
   async getTotal() {
     const params = {
@@ -72,6 +72,10 @@ export class GalleryService {
     return total;
   }
 
+  // async formatGalleryObject(imagesArray) {
+  //   log(this.getGalleryObjects())
+  // }
+
   /// UPLOAD
   // async formatJPEG(filename) {
   //   const regex = /.jpeg/;
@@ -84,7 +88,8 @@ export class GalleryService {
   // }
 
   async getGalleryObjects(query, email) {
-    await this.getTotal();
+    // await this.getPagesNumber(query);
+    // await this.getTotal();
     log(query, "IN FUNCTION");
     if (!query.filter) {
       const params = {
@@ -129,7 +134,7 @@ export class GalleryService {
 
       const GetItem = new QueryCommand(params);
       const img = await DynamoClient.send(GetItem);
-      log(img);
+      log("IMG: ", img);
       return img;
     }
   }

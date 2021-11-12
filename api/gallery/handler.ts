@@ -97,7 +97,14 @@ export const getGallery = async (event) => {
 
   //   const GetItem = new QueryCommand(params);
   //   const img = await DynamoClient.send(GetItem);
-  log(images);
+  log("IMAGES: ", images.Items);
+  let photos = [] as any;
+  for (let i = 0; i < images.Items?.length!; i++) {
+    photos.push(images.Items![i].URL.S);
+
+    log(images.Items![i].URL.S);
+  }
+  return JSON.stringify(photos);
   // return createResponse(images.statusCode, images.content);
 
   // log(event.queryStringParameters);
