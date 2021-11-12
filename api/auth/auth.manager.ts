@@ -29,7 +29,6 @@ export class AuthManager {
 
   async signUp(user: User) /*: Promise<Response>*/ {
     const isInDB = await this.isUserInDB(user);
-    log("IS IN DB: ", isInDB);
     if (isInDB) {
       return {
         statusCode: 400,
@@ -45,7 +44,6 @@ export class AuthManager {
   }
 
   async isUserInDB(user: User) /*: Promise<boolean>*/ {
-    log(user);
     const params = {
       TableName: getEnv("USERS_TABLE_NAME"),
       Key: {
@@ -59,11 +57,8 @@ export class AuthManager {
     };
     const GetItem = new GetItemCommand(params);
     const userFindResult = await DynamoClient.send(GetItem);
-    log(userFindResult);
     if (userFindResult.Item == null) return false;
     const passwordFromDB = userFindResult.Item.password.S;
-    log("USER PASSWORD:", user.password);
-    log("DB PASSWORD:", passwordFromDB);
 
     if (bcrypt.compareSync(user.password, passwordFromDB!)) {
       return true;

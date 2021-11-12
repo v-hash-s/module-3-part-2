@@ -1,6 +1,6 @@
 import { GalleryService } from "./gallery.service";
 import { getEnv } from "@helper/environment";
-import { log } from "@helper/logger";
+// import { log } from "@helper/logger";
 import * as fs from "fs";
 import * as jwt from "jsonwebtoken";
 import * as util from "util";
@@ -19,7 +19,6 @@ export class GalleryManager {
   private readonly token?;
 
   constructor(payload?, token?) {
-    // this.service = new GalleryService();
     this.content = payload?.files[0]?.content;
     this.filename = payload?.files[0]?.filename;
     this.token = token;
@@ -46,13 +45,10 @@ export class GalleryManager {
     const saltRounds = getEnv("SALT_ROUNDS");
     const salt = await bcrypt.genSalt(Number(saltRounds));
     const hashedPassword = await bcrypt.hash(image, salt);
-    log("hashed password: ", hashedPassword);
     return hashedPassword;
   }
 
   async saveImageToDB(file, filename, email) {
-    log("start saving to db");
-
     const params = {
       TableName: getEnv("USERS_TABLE_NAME"),
       Item: {
@@ -72,7 +68,6 @@ export class GalleryManager {
         },
       },
     };
-    log("SEnding to db image name");
     return await DynamoClient.send(new PutItemCommand(params));
   }
 

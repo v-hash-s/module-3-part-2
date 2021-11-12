@@ -3,7 +3,6 @@ import { AuthManager } from "./auth.manager";
 import { AuthService } from "./auth.service";
 import { errorHandler } from "../../helper/http-api/error-handler";
 import { createResponse } from "../../helper/http-api/response";
-import { log } from "@helper/logger";
 
 export const signUp = async (event) => {
   try {

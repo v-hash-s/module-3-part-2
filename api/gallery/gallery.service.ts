@@ -1,7 +1,6 @@
 import { getEnv } from "@helper/environment";
-import { log } from "@helper/logger";
-import * as path from "path";
-import { QueryParameters, GalleryResponse } from "./gallery.interfaces";
+// import { log } from "@helper/logger";
+import { QueryParameters } from "./gallery.interfaces";
 import { DynamoClient } from "../../services/dynamodb-client";
 import { ListObjectsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { QueryCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
@@ -15,7 +14,6 @@ export class GalleryService {
   }
 
   async getPagesNumber(queryParameters: QueryParameters): Promise<number> {
-    log(queryParameters);
     let limit = Number(queryParameters.limit);
     const counts = await this.getTotal();
     const finalResult = Math.ceil(counts / limit);
@@ -32,7 +30,6 @@ export class GalleryService {
     for (let i = 0; i < response?.Contents?.length!; i++) {
       total++;
     }
-    log(total);
     return total;
   }
 
@@ -47,7 +44,6 @@ export class GalleryService {
       i++
     ) {
       photos.push(images[i]);
-      log(images[i] + " : " + i);
     }
     return {
       objects: await photos,
@@ -56,18 +52,15 @@ export class GalleryService {
   }
 
   async formatGalleryObject(images) {
-    log("IN FORMAT FUNC: ", images);
     let urls = await images.map(async (el) => {
       return await el;
     });
     const photos = await Promise.all(urls);
     const resolvedImages = photos.map((el: any) => el.URL.S);
-    log("PHOTOS: ", resolvedImages);
     return resolvedImages;
   }
 
   async getGalleryObjects(query, email) {
-    log(query, "IN FUNCTION");
     if (query.filter != "true") {
       const params = {
         TableName: getEnv("USERS_TABLE_NAME"),
@@ -87,7 +80,6 @@ export class GalleryService {
       const GetItem = new ScanCommand(params);
 
       const img = await DynamoClient.send(GetItem);
-      log(img);
       return img.Items;
     } else {
       const params = {
@@ -111,14 +103,12 @@ export class GalleryService {
 
       const GetItem = new QueryCommand(params);
       const img = await DynamoClient.send(GetItem);
-      log("IMG: ", img);
       return img.Items;
     }
   }
 
   async saveImageInDB(payload, email) {
     const result = await this.manager.isExist(payload, email);
-    log(payload.files[0].contentType);
     if (!result) {
       const command = new PutObjectCommand({
         Bucket: getEnv("IMAGES_BUCKET_NAME"),
@@ -128,17 +118,13 @@ export class GalleryService {
         ContentType: payload.files[0].contentType,
       });
       const response = await s3Client.send(command);
-      log(response);
       const res = await this.manager.isExist(payload, email);
-      log("IS EXIST: ", res);
       if (!res) {
         return {
           statusCode: 404,
           content: "Something went wrong. Try again later",
         };
       } else {
-        log("is about to save img to db");
-
         await this.manager.saveImageToDB(
           payload.files[0],
           `${email}/${payload.files[0].filename}`,
@@ -150,7 +136,6 @@ export class GalleryService {
         };
       }
     } else {
-      log("is about to save img to db");
       await this.manager.saveImageToDB(
         payload.files[0],
         `${email}/${payload.files[0].filename}`,
