@@ -5,8 +5,8 @@ import * as path from "path";
 import * as fs from "fs";
 import { QueryParameters, GalleryResponse } from "./gallery.interfaces";
 import { DynamoClient } from "../../services/dynamodb-client";
-import { client } from "./handler";
 import { S3Service } from "../../services/s3.service";
+import * as crypto from "crypto";
 import {
   paginateListObjectsV2,
   S3Client,
@@ -16,6 +16,14 @@ import {
   HeadObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import {
+  GetItemCommand,
+  PutItemCommand,
+  PutItemInput,
+  PutItemOutput,
+  QueryCommand,
+  ScanCommand,
+} from "@aws-sdk/client-dynamodb";
 import { GalleryManager } from "./gallery.manager";
 import { s3Client } from "@services/s3Client";
 export class GalleryService {
@@ -66,6 +74,62 @@ export class GalleryService {
   //     // return filename.replace(".jpeg", jpg);
   //   }
   // }
+
+  async getGalleryObjects(query, email) {
+    log(query, "IN FUNCTION");
+    if (!query.filter) {
+      const params = {
+        TableName: getEnv("USERS_TABLE_NAME"),
+        ProjectionExpression: "#URL",
+        ExpressionAttributeNames: {
+          "#d": "data",
+          "#URL": "URL",
+        },
+        ExpressionAttributeValues: {
+          ":data": {
+            S: "image_",
+          },
+        },
+        FilterExpression: "begins_with(#d, :data)",
+      };
+
+      const GetItem = new ScanCommand(params);
+
+      const img = await DynamoClient.send(GetItem);
+      log(img);
+      return {
+        content: JSON.stringify(img),
+        statusCode: 200,
+      };
+    } else {
+      const params = {
+        TableName: getEnv("USERS_TABLE_NAME"),
+        ProjectionExpression: "#URL",
+        ExpressionAttributeNames: {
+          "#e": "email",
+          "#d": "data",
+          "#URL": "URL",
+        },
+        ExpressionAttributeValues: {
+          ":email": {
+            S: email,
+          },
+          ":data": {
+            S: "image_",
+          },
+        },
+        KeyConditionExpression: "#e = :email AND begins_with ( #d, :data )",
+      };
+
+      const GetItem = new QueryCommand(params);
+      const img = await DynamoClient.send(GetItem);
+      log(img);
+      return {
+        content: JSON.stringify(img),
+        statusCode: 200,
+      };
+    }
+  }
 
   async saveImageInDB(payload, email) {
     const result = await this.manager.isExist(payload, email);

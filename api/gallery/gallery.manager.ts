@@ -24,7 +24,6 @@ import {
   PutItemInput,
   PutItemOutput,
 } from "@aws-sdk/client-dynamodb";
-import { client } from "./handler";
 import { AttributeValue, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { createServer } from "http";
 import { createSecretKey } from "crypto";
