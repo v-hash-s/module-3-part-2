@@ -45,10 +45,5 @@ export const authConfig: AWSPartitial = {
         },
       ],
     },
-
-    jwtauth: {
-      handler: "api/auth/handler.authenticationJWT",
-      memorySize: 128,
-    },
   },
 };

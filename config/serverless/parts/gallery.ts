@@ -16,7 +16,7 @@ export const galleryConfig: AWSPartitial = {
 
   functions: {
     jwtauth: {
-      handler: "api/auth/handler.authenticationJWT",
+      handler: "api/auth/jwt-auth.authenticationJWT",
       memorySize: 128,
     },
 
