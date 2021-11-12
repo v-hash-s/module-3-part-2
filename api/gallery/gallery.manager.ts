@@ -1,39 +1,19 @@
 import { GalleryService } from "./gallery.service";
-// import ImageModel from "@models/MongoDB/image.model";
 import { getEnv } from "@helper/environment";
 import { log } from "@helper/logger";
-import { connectDB } from "@services/db_connection";
 import * as fs from "fs";
 import * as jwt from "jsonwebtoken";
 import * as util from "util";
-const stat = util.promisify(fs.stat);
 import * as path from "path";
 import { DynamoClient } from "../../services/dynamodb-client";
 import * as bcrypt from "bcryptjs";
-import {
-  paginateListObjectsV2,
-  S3Client,
-  S3ClientConfig,
-  ListObjectsCommand,
-  PutObjectCommand,
-  HeadObjectCommand,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
-import {
-  PutItemCommand,
-  PutItemInput,
-  PutItemOutput,
-} from "@aws-sdk/client-dynamodb";
-import { AttributeValue, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
-import { createServer } from "http";
-import { createSecretKey } from "crypto";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { PutItemCommand } from "@aws-sdk/client-dynamodb";
+
 import { s3Client } from "@services/s3Client";
 
 export class GalleryManager {
   private readonly service: GalleryService;
-  private readonly PATH_TO_IMAGES = path.resolve(
-    path.join(__dirname, "../../../../images")
-  );
   private readonly content?;
   private readonly filename?;
   private readonly token?;
@@ -96,33 +76,6 @@ export class GalleryManager {
     return await DynamoClient.send(new PutItemCommand(params));
   }
 
-  // async sendUsersImage(queryParameters, email, images) {
-  //   let filter;
-  //   if (queryParameters.filter == null) {
-  //     filter = false;
-  //     const galleryResponse = await this.service.formatGalleryObject(
-  //       images
-  //     );
-  //     return this.returnGalleryResponse(galleryResponse);
-  //   } else {
-  //     log("EMAIL: ", email);
-  //     const objects = await ImageModel.find(
-  //       { owner: await email },
-  //       { path: 1, _id: 0 }
-  //     ).exec();
-  //     log(objects);
-  //     const images = objects.map((img: any) => {
-  //       return img.path;
-  //     });
-  //     log(images);
-
-  //     const galleryResponse = {
-  //       objects: images,
-  //     };
-  //     log(galleryResponse);
-  //     return this.returnGalleryResponse(galleryResponse);
-  //   }
-  // }
   async sendGalleryObject(images) {
     return {
       content: JSON.stringify(images),

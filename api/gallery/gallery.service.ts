@@ -1,35 +1,13 @@
-import { connectDB } from "@services/db_connection";
 import { getEnv } from "@helper/environment";
 import { log } from "@helper/logger";
 import * as path from "path";
-import * as fs from "fs";
 import { QueryParameters, GalleryResponse } from "./gallery.interfaces";
 import { DynamoClient } from "../../services/dynamodb-client";
-import * as crypto from "crypto";
-import {
-  paginateListObjectsV2,
-  S3Client,
-  S3ClientConfig,
-  ListObjectsCommand,
-  PutObjectCommand,
-  HeadObjectCommand,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
-import {
-  GetItemCommand,
-  PutItemCommand,
-  PutItemInput,
-  PutItemOutput,
-  QueryCommand,
-  ScanCommand,
-} from "@aws-sdk/client-dynamodb";
+import { ListObjectsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { QueryCommand, ScanCommand } from "@aws-sdk/client-dynamodb";
 import { GalleryManager } from "./gallery.manager";
 import { s3Client } from "@services/s3Client";
-import { AnyDocument } from "dynamoose/dist/Document";
 export class GalleryService {
-  private readonly FOLDER_PATH: string = path.resolve(
-    path.join(__dirname, "../../../../images")
-  );
   private readonly manager: GalleryManager;
 
   constructor() {
@@ -78,15 +56,8 @@ export class GalleryService {
   }
 
   async formatGalleryObject(images) {
-    // const images = await imgs;
     log("IN FORMAT FUNC: ", images);
-    // let photos = [] as any;
-    // for (let i = 0; i < images.Items?.length!; i++) {
-    //   photos.push(images.Items![i].URL.S);
-    //   // log(images.Items![i].URL.S);
-    // }
     let urls = await images.map(async (el) => {
-      // return await el.Items!.URL.S;
       return await el;
     });
     const photos = await Promise.all(urls);
@@ -95,20 +66,7 @@ export class GalleryService {
     return resolvedImages;
   }
 
-  /// UPLOAD
-  // async formatJPEG(filename) {
-  //   const regex = /.jpeg/;
-  //   const jpg = ".jpg";
-  //   if (filename.match(regex)) {
-  //     log("Filename: ", filename);
-  //     log("CHANGE: ", filename.replace(".jpeg", jpg));
-  //     // return filename.replace(".jpeg", jpg);
-  //   }
-  // }
-
   async getGalleryObjects(query, email) {
-    // await this.getPagesNumber(query);
-    // await this.getTotal();
     log(query, "IN FUNCTION");
     if (query.filter != "true") {
       const params = {
@@ -161,11 +119,9 @@ export class GalleryService {
   async saveImageInDB(payload, email) {
     const result = await this.manager.isExist(payload, email);
     log(payload.files[0].contentType);
-    // this.formatJPEG(payload.files[0].filename);
     if (!result) {
       const command = new PutObjectCommand({
         Bucket: getEnv("IMAGES_BUCKET_NAME"),
-        // Body: payload.files[0].content,
         Body: payload.files[0].content,
         Key: `${email}/${payload.files[0].filename}`,
         ACL: "public-read",
