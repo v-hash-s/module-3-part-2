@@ -4,14 +4,14 @@ import { User } from "./auth.interfaces";
 import * as bcrypt from "bcryptjs";
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { DynamoClient } from "@services/dynamodb-client";
-// import { log } from "@helper/logger";
+import { log } from "@helper/logger";
 
 export class AuthService {
   signJWTToken(userEmail: string): string {
     return jwt.sign({ email: userEmail }, getEnv("TOKEN_KEY"));
   }
 
-  async createUser(user: User) {
+  async createUser(user: User): Promise<void> {
     const params = {
       TableName: getEnv("USERS_TABLE_NAME"),
       Item: {

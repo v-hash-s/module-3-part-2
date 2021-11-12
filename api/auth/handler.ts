@@ -1,10 +1,10 @@
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 import { AuthManager } from "./auth.manager";
-import { AuthService } from "./auth.service";
 import { errorHandler } from "../../helper/http-api/error-handler";
 import { createResponse } from "../../helper/http-api/response";
+import { Response, Token } from "./auth.interfaces";
 
-export const signUp = async (event) => {
+export const signUp: APIGatewayProxyHandlerV2<Response> = async (event) => {
   try {
     const user = JSON.parse(event.body!);
     const manager = new AuthManager();
@@ -15,7 +15,7 @@ export const signUp = async (event) => {
   }
 };
 
-export const login = async (event) => {
+export const login: APIGatewayProxyHandlerV2<Token> = async (event) => {
   try {
     const user = JSON.parse(event.body!);
     const manager = new AuthManager();

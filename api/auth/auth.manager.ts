@@ -27,7 +27,7 @@ export class AuthManager {
     }
   }
 
-  async signUp(user: User) /*: Promise<Response>*/ {
+  async signUp(user: User): Promise<Response> {
     const isInDB = await this.isUserInDB(user);
     if (isInDB) {
       return {
@@ -43,7 +43,7 @@ export class AuthManager {
     }
   }
 
-  async isUserInDB(user: User) /*: Promise<boolean>*/ {
+  async isUserInDB(user: User): Promise<boolean> {
     const params = {
       TableName: getEnv("USERS_TABLE_NAME"),
       Key: {

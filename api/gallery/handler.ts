@@ -6,26 +6,23 @@ import * as multipartParser from "lambda-multipart-parser";
 
 import { GalleryService } from "./gallery.service";
 
-export const getGallery = async (event) => {
+export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
   const query = event.queryStringParameters;
-  log(query);
   const manager = new GalleryManager();
   const service = new GalleryService();
+  //@ts-ignore
   const token = await event.multiValueHeaders.Authorization.toString().replace(
     "Bearer ",
     ""
   );
   const email = await manager.getEmailFromToken(token);
   const images = await service.getGalleryObjects(query, email);
-  log("IMAGES: ", images);
   const readyImages = await service.formatGalleryObject(images);
-  log("READY IMAGES: ", readyImages);
 
-  if (query.page && query.limit) {
+  if (query!.page && query!.limit) {
     const toSendImages = await manager.sendGalleryObject(
-      await service.getPagedImages(readyImages, query.page, query.limit)
+      await service.getPagedImages(readyImages, query!.page, query!.limit)
     );
-    log("WITH QUERY: ", toSendImages);
     return createResponse(toSendImages.statusCode, toSendImages.content);
   } else {
     const toSendImages = await manager.sendGalleryObject(readyImages);
@@ -33,15 +30,14 @@ export const getGallery = async (event) => {
   }
 };
 
-export const upload = async (event) => {
+export const upload: APIGatewayProxyHandlerV2 = async (event) => {
+  // @ts-ignore
   const payload = await multipartParser.parse(event);
-
   // @ts-ignore
   const token = await event.multiValueHeaders.Authorization.toString().replace(
     "Bearer ",
     ""
   );
-  log(payload.files);
   const manager = new GalleryManager(payload, token);
   const service = new GalleryService();
   const email = await manager.getEmailFromToken(token);
