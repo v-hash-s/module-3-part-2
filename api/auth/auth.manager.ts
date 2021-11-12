@@ -1,47 +1,16 @@
-import { HttpBadRequestError } from "@errors/http";
 import { AuthService } from "./auth.service";
-import { connectDB } from "@services/db_connection";
-// import UserModel from "@models/MongoDB/user.model";
 import * as bcrypt from "bcryptjs";
 import { log } from "@helper/logger";
 import { User, Response } from "./auth.interfaces";
 import { getEnv } from "@helper/environment";
 import { DynamoClient } from "@services/dynamodb-client";
-var AWS = require("aws-sdk");
-import {
-  GetItemCommand,
-  GetItemInput,
-  GetItemOutput,
-} from "@aws-sdk/client-dynamodb";
-
-// AWS.config.update({
-//   region: "us-east-2",
-//   endpoint: "http://localhost:3000",
-// });
-
-var docClient = new AWS.DynamoDB.DocumentClient();
-var ddb = new AWS.DynamoDB();
-// const table = getEnv("TABLE");
+import { GetItemCommand } from "@aws-sdk/client-dynamodb";
 
 export class AuthManager {
   private readonly service: AuthService;
-  private readonly params;
   constructor() {
     this.service = new AuthService();
   }
-  // async findUserInDB(user: User): Promise<boolean> {
-  //   await connectDB;
-
-  //   const data = await UserModel.findOne({ email: user.email }).then((data) => {
-  //     if (bcrypt.compareSync(user.password, data.password)) {
-  //       log("USER PASSWORD: ", user.password);
-  //       log("DB PASSWORD: ", data.password);
-  //       return true;
-  //     } else return false;
-  //   });
-  //   console.log(data);
-  //   return data;
-  // }
 
   async sendResponseToUser(user: User): Promise<Response> {
     let isInDB = await this.isUserInDB(user);

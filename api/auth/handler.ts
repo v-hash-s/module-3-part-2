@@ -9,11 +9,8 @@ export const signUp = async (event) => {
   try {
     const user = JSON.parse(event.body!);
     const manager = new AuthManager();
-    // log(await manager.isUserInDB(user));
     const result = await manager.signUp(user);
-    // const result = await manager.sendResponseToUser(user);
     return createResponse(result.statusCode, result.content);
-    // return result;
   } catch (err) {
     return errorHandler(err);
   }

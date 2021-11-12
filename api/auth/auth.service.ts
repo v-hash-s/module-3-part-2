@@ -1,14 +1,8 @@
 import { getEnv } from "@helper/environment";
 import * as jwt from "jsonwebtoken";
-import { connectDB } from "@services/db_connection";
-// import UserModel from "@models/MongoDB/user.model";
-import { Token, User } from "./auth.interfaces";
+import { User } from "./auth.interfaces";
 import * as bcrypt from "bcryptjs";
-import {
-  PutItemCommand,
-  PutItemInput,
-  PutItemOutput,
-} from "@aws-sdk/client-dynamodb";
+import { PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { DynamoClient } from "@services/dynamodb-client";
 import { log } from "@helper/logger";
 
@@ -21,14 +15,6 @@ export class AuthService {
     log("creating new");
     const params = {
       TableName: getEnv("USERS_TABLE_NAME"),
-      // Item: {
-      //   email: {
-      //     S: user.email,
-      //   },
-      //   password: {
-      //     S: await this.hashPassword(user.password),
-      //   },
-      // },
       Item: {
         email: { S: user.email },
         data: { S: "user" },
